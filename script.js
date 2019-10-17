@@ -1,11 +1,10 @@
-var username = "team4";
-var password = "PptzOnKP";
+var username = "team4_test";
+var password = "nH5$aIwQ";
 var token = "";
 var matchID = 0;
 var myID;
 var mine;
 var competitor;
-var agentSelected = false;
 var tiled;
 var submitData = [];
 function drawingMatch(data) {
@@ -63,19 +62,16 @@ function drawingMatch(data) {
 function selectAgent(id, x, y) {
     console.log("Agent selected");
     document.getElementById(x + "_" + y).style.background = "#e52efa";
-    agentSelected = true;
     for (let dx = -1; dx < 2; dx++) {
         for(let dy = -1; dy < 2; dy++){
             var curX = x + dx;
             var curY = y + dy;
-            if(curX < 1 || curY < 1 || curX > tiled.length || curY > tiled.length   ) {
+            if(curX < 1 || curY < 1 || curX > tiled[0].length || curY > tiled.length   ) {
                 continue;
             }
             if(tiled[curX - 1][curY - 1] === competitor.teamID){
                 document.getElementById(curX + "_" + curY).setAttribute('onclick', 'action(' + id + ',' + dx + ',' + dy + ', "remove")');
-            } else if (dx === 0 && dy === 0){
-                document.getElementById(curX + "_" + curY).setAttribute('onclick', 'action(' + id + ',' + dx + ',' + dy + ', "stay")');
-            } else {
+            } else if (dx != 0 || dy != 0){
                 document.getElementById(curX + "_" + curY).setAttribute('onclick', 'action(' + id + ',' + dx + ',' + dy + ', "move")');
             }
         }
@@ -83,12 +79,9 @@ function selectAgent(id, x, y) {
     }
 }
 function action(agentID, dx, dy, type) {
-    if(agentSelected){
-        $("[agent = '" + agentID +"']" ).css("background", "yellow");
-        $("[onclick *= 'action(" + agentID + "," + dx + "," + dy + "']").css("background", "lightskyblue");
-        submitData.push({"agentID" : agentID, "dx" : dx, "dy" : dy, "type" : type});
-    }
-    agentSelected = false;
+    $("[agent = '" + agentID +"']" ).css("background", "yellow");
+    $("[onclick *= 'action(" + agentID + "," + dx + "," + dy + "']").css("background", "lightskyblue");
+    submitData.push({"agentID" : agentID, "dx" : dx, "dy" : dy, "type" : type});
 }
 function run() {
     tmp = {"actions" : submitData}
