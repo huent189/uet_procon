@@ -7,7 +7,7 @@ var mine;
 var competitor;
 var agentSelected = false;
 var tiled;
-var submitData = {};
+var submitData = [];
 var startTime;
 var matchTime = {"start" : 0, "duration" : 0, "turn" : 0, "totalDuration" : 0};
 function drawingMatch(data) {
@@ -54,7 +54,7 @@ function drawingMatch(data) {
     for (let i = 0; i < mine.agents.length; i++) {
         let x = mine.agents[i].x;
         let y = mine.agents[i].y;
-        submitData[mine.agents[i].agentID] = {"agentID" : mine.agents[i].agentID, "dx" : 0, "dy" : 0, "type" : "stay"};
+        // submitData[mine.agents[i].agentID] = {"agentID" : mine.agents[i].agentID, "dx" : 0, "dy" : 0, "type" : "stay"};
         document.getElementById(x + "_" + y).style.background = "lightskyblue";
         document.getElementById(x + "_" + y).setAttribute('onclick', 'selectAgent(' + mine.agents[i].agentID + ',' + x + ',' + y + ')');
         document.getElementById(x + "_" + y).setAttribute('agent', mine.agents[i].agentID);
@@ -91,19 +91,24 @@ function action(agentID, dx, dy, type) {
     if(agentSelected){
         $("[agent = '" + agentID +"']" ).css("background", "yellow");
         $("[onclick *= 'action(" + agentID + "," + dx + "," + dy + "']").css("background", "lightskyblue");
-        submitData[agentID] = {"agentID" : agentID, "dx" : dx, "dy" : dy, "type" : type};
+        submitData.push({"agentID" : agentID, "dx" : dx, "dy" : dy, "type" : type});
     }
     agentSelected = false;
 }
 function run() {
+    tmp = {"actions" : submitData}
+    jsonobj = JSON.stringify(tmp);
+    console.log(jsonobj);
+    submitData = [];
     $.ajax({
         url: "http://sv-procon.uet.vnu.edu.vn:3000/matches/" + matchID + "/action",
         type: 'post',
         // dataType: 'json',
-        data: {
-            token : token,
-            actions : submitData
+        headers : {
+            "Authorization" : token,
+            "Content-Type" : "application/json"
         },
+        data: jsonobj,
         success: function (data) {
             console.log(data);
         },
