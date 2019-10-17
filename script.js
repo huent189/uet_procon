@@ -8,8 +8,6 @@ var competitor;
 var agentSelected = false;
 var tiled;
 var submitData = [];
-var startTime;
-var matchTime = {"start" : 0, "duration" : 0, "turn" : 0, "totalDuration" : 0};
 function drawingMatch(data) {
     let height = data.height;
     let width = data.width;
@@ -26,15 +24,12 @@ function drawingMatch(data) {
     }
     $("#myPoint").html(mine.areaPoint + mine.tilePoint);
     $("#competitorPoint").html(competitor.areaPoint + competitor.tilePoint);
-    
-    matchTime.start = data.startedAtUnixTime;
-    console.log(data.startedAtUnixTime);
     html = "";
     for (let i = 1; i <= height; i++) {
         let tr = "";
         for (let j = 1; j <= width; j++) {
             let td = "";
-            td = "<td id='" + i + "_" + j + "'>" + point[i - 1][j - 1] + "</td>";
+            td = "<td id='" + j + "_" + i + "'>" + point[i - 1][j - 1] + "</td>";
             tr = tr + td;
         }
         html = html + "<tr>" + tr + "</tr>";
@@ -44,10 +39,10 @@ function drawingMatch(data) {
 
         for (let j = 1; j <= width; j++) {
             if (tiled[i - 1][j - 1] === mine.teamID) {
-                document.getElementById(i + "_" + j).style.background = "yellow";
+                document.getElementById(j + "_" + i).style.background = "yellow";
             }
             if (tiled[i - 1][j - 1] === competitor.teamID) {
-                document.getElementById(i + "_" + j).style.background = "red";
+                document.getElementById(j + "_" + i).style.background = "red";
             }
         }
     }
@@ -128,8 +123,6 @@ function run() {
 function processMatchInfoBefore(data) {
     info = "";
     myID = data[0].teamID;
-    matchTime.duration = data[0].turnMillis;
-    matchTime.totalDuration = matchTime.duration + data[0].turnMillis;
     for (let i = 0; i < data.length; i++) {
         info += "ID trận đấu: " + data[i].id;
         info += "<br> Đối thủ: " + data[i].matchTo;
@@ -211,16 +204,4 @@ $(document).ready(function () {
         console.log(token);
         getMatchBefore(token);
     });
-    setInterval(function () {
-        if(matchTime.start != 0)
-        {
-            curTurn = Math.floor((Date.now() - matchTime.start)/ matchTime.totalDuration);
-            if(matchTime.turn != curTurn){
-                // getCurrentMatchInfo();
-                matchTime.turn = curTurn;
-                $("#turnNumber").html(matchTime.turn);
-            }
-            $("#remainingTime").html((matchTime.duration - (Date.now() - matchTime.start - matchTime.turn * matchTime.totalDuration))/1000);
-        }
-    }, 400);
 });
