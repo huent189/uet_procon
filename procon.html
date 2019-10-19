@@ -69,10 +69,15 @@
             </div>
         </div>
         <div>
+            <button onclick='toJson()'>To JSON</button>
             <button onclick="run()">Submit nước đi</button>
             <button onclick="getCurrentMatchInfo()">Update map</button>
+            <div><textarea name="" id="jsonSend" cols="30" rows="10">123</textarea></div>
             <p> Điểm mình: <span id="myPoint"></span> </p>
             <p> Điểm đối thủ: <span id="competitorPoint"></span></p>
+            
+            <p> Thời gian còn lại của turn: <span id="remainingTime">
+            <p> Turn: <span id="turnNumber">
         </div>
         <div id="matchInformation">
             <p></p>

@@ -1,28 +1,33 @@
-var username = "team4_test";
-var password = "nH5$aIwQ";
-var token = "";
+var runloop = false;
+var host = "http://112.137.129.202:3000/"
+var username = "team4";
+var password = "0%6q&XuF";
+var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoidGVhbTQiLCJpYXQiOjE1NzE0NDkzOTcsImV4cCI6MTU3MTQ1NjU5N30.FIqyBt-Q04lPkNlPvBDZOrurRu0mQmtqFXmTTtTgMmk";
 var matchID = 0;
 var myID;
 var mine;
 var competitor;
 var tiled;
 var submitData = [];
+var curTurn = -1;
+var matchTime = { "start": 0, "duration": 0, "turn": 0, "totalDuration": 0 }
 function drawingMatch(data) {
     let height = data.height;
     let width = data.width;
     let point = data.points;
     tiled = data.tiled;
     console.log(tiled);
-    
-    if(data.teams[0].teamID === myID){
+
+    if (data.teams[0].teamID === myID) {
         mine = data.teams[0];
         competitor = data.teams[1];
-    } else{
+    } else {
         mine = data.teams[1];
         competitor = data.teams[0];
     }
     $("#myPoint").html(mine.areaPoint + mine.tilePoint);
     $("#competitorPoint").html(competitor.areaPoint + competitor.tilePoint);
+    matchTime.start = data.startedAtUnixTime;
     html = "";
     for (let i = 1; i <= height; i++) {
         let tr = "";
@@ -60,41 +65,39 @@ function drawingMatch(data) {
     }
 }
 function selectAgent(id, x, y) {
-    console.log("Agent selected");
+    console.log("Agent selected" + id);
     document.getElementById(x + "_" + y).style.background = "#e52efa";
     for (let dx = -1; dx < 2; dx++) {
-        for(let dy = -1; dy < 2; dy++){
+        for (let dy = -1; dy < 2; dy++) {
             var curX = x + dx;
             var curY = y + dy;
-            if(curX < 1 || curY < 1 || curX > tiled[0].length || curY > tiled.length   ) {
+            if (curX < 1 || curY < 1 || curX > tiled[0].length || curY > tiled.length) {
                 continue;
             }
-            if(tiled[curX - 1][curY - 1] === competitor.teamID){
+            if (tiled[curY - 1][curX - 1] == competitor.teamID) {
                 document.getElementById(curX + "_" + curY).setAttribute('onclick', 'action(' + id + ',' + dx + ',' + dy + ', "remove")');
-            } else if (dx != 0 || dy != 0){
+            } else if ((dx != 0 || dy != 0) && (tiled[curY - 1][curX - 1] != mine.teamID))  {
                 document.getElementById(curX + "_" + curY).setAttribute('onclick', 'action(' + id + ',' + dx + ',' + dy + ', "move")');
             }
         }
-        
+
     }
 }
 function action(agentID, dx, dy, type) {
-    $("[agent = '" + agentID +"']" ).css("background", "yellow");
+    $("[agent = '" + agentID + "']").css("background", "yellow");
     $("[onclick *= 'action(" + agentID + "," + dx + "," + dy + "']").css("background", "lightskyblue");
-    submitData.push({"agentID" : agentID, "dx" : dx, "dy" : dy, "type" : type});
+    submitData.push({ "agentID": agentID, "dx": dx, "dy": dy, "type": type });
 }
 function run() {
-    tmp = {"actions" : submitData}
-    jsonobj = JSON.stringify(tmp);
+    var jsonobj = $('#jsonSend').val();
     console.log(jsonobj);
-    submitData = [];
     $.ajax({
-        url: "http://sv-procon.uet.vnu.edu.vn:3000/matches/" + matchID + "/action",
+        url: host + "matches/" + matchID + "/action",
         type: 'post',
         // dataType: 'json',
-        headers : {
-            "Authorization" : token,
-            "Content-Type" : "application/json"
+        headers: {
+            "Authorization": token,
+            "Content-Type": "application/json"
         },
         data: jsonobj,
         success: function (data) {
@@ -106,11 +109,11 @@ function run() {
             },
             400: function (xhr) {
                 alert("InvalidMatches  or TooEarly: ");
-                log(xhr.responseText);
+                // log(xhr.responseText);
             },
 
         }
-        
+
     });
 }
 function processMatchInfoBefore(data) {
@@ -125,13 +128,14 @@ function processMatchInfoBefore(data) {
         info += "<br>--------<br>";
         $("#matchInformation").append('<button onclick="getMatch(' + data[i].id + ')">GET MATCH - ' + data[i].id + '</button>');
     }
-    console.log(info);
+    // console.log(info);
     $("#matchInformation > p").html(info);
-    matchID = data[0].id;
-
+    // matchID = data[0].id;
+    matchTime.duration = data[0].turnMillis;
+    matchTime.totalDuration = matchTime.duration + data[0].intervalMillis + 1;
 }
 async function login() {
-    await $.post('http://sv-procon.uet.vnu.edu.vn:3000/api/auth/account-login',
+    await $.post( host + 'api/auth/account-login',
         {
             user_name: username,
             user_pass: password
@@ -144,7 +148,7 @@ async function login() {
 }
 function getMatchBefore(t) {
     $.ajax({
-        url: 'http://sv-procon.uet.vnu.edu.vn:3000/matches',
+        url: host + 'matches',
         type: 'get',
         dataType: 'json',
         data: {
@@ -162,7 +166,7 @@ function getMatchBefore(t) {
 }
 function getCurrentMatchInfo() {
     $.ajax({
-        url: "http://sv-procon.uet.vnu.edu.vn:3000/matches/" + matchID,
+        url: host + "matches/" + matchID,
         type: 'get',
         dataType: 'json',
         data: {
@@ -178,14 +182,12 @@ function getCurrentMatchInfo() {
             },
             400: function (xhr) {
                 alert("InvalidMatches  or TooEarly: ");
-                log(xhr.responseText);
+                // log(xhr.responseText);
             },
 
         }
     });
-}
-function updateTime(params) {
-    
+    return "update_ok";
 }
 function getMatch(id) {
     matchID = id;
@@ -194,7 +196,25 @@ function getMatch(id) {
 }
 $(document).ready(function () {
     login().then(function () {
-        console.log(token);
+        // console.log(token);
         getMatchBefore(token);
     });
+    setInterval(function () {
+        if (runloop && matchTime.start != 0) {
+            curTurn = Math.floor((Date.now() - matchTime.start) / matchTime.totalDuration);
+            if (matchTime.turn != curTurn) {
+                console.log(Date.now());
+                console.log(getCurrentMatchInfo());
+                matchTime.turn = curTurn;
+                $("#turnNumber").html(matchTime.turn);
+            }
+            $("#remainingTime").html((matchTime.duration - (Date.now() - matchTime.start - matchTime.turn * matchTime.totalDuration)) / 1000);
+        }
+    }, 1000);
 });
+function toJson() {
+    var tmp = { "actions": submitData }
+    var tmp2 = JSON.stringify(tmp);
+    $('#jsonSend').val(tmp2);
+    submitData = [];
+}
